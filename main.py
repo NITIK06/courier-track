@@ -3,36 +3,39 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from database import engine, Base
 from routes import auth, shipments, dashboard
+from seed_data import run_seed
 
-# ── Create all tables in MySQL if they don't exist ────────────────────────────
-Base.metadata.create_all(bind=engine)
-
-# ── FastAPI app ────────────────────────────────────────────────────────────────
+# ── FastAPI app ─────────────────────────────────────────
 app = FastAPI(
     title="CourierTrack API",
     description="Backend for managing courier shipments across 10 branches",
     version="1.0.0"
 )
 
-# ── CORS — allows your frontend HTML to call this API ─────────────────────────
+# ── RUN SEED DATA AUTOMATICALLY ─────────────────────────
+@app.on_event("startup")
+def startup_event():
+    Base.metadata.create_all(bind=engine)
+    run_seed()
+
+# ── CORS ────────────────────────────────────────────────
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],        # In production: replace * with your domain
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# ── Register all route files ──────────────────────────────────────────────────
+# ── ROUTES ──────────────────────────────────────────────
 app.include_router(auth.router)
 app.include_router(shipments.router)
 app.include_router(dashboard.router)
 
-# ── Serve frontend HTML as static files ──────────────────────────────────────
+# ── FRONTEND ────────────────────────────────────────────
 app.mount("/", StaticFiles(directory="frontend", html=True), name="frontend")
 
-
+# ── HEALTH CHECK ────────────────────────────────────────
 @app.get("/health")
 def health_check():
-    """Quick check that the server is running"""
     return {"status": "ok", "message": "CourierTrack API is running"}
