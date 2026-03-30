@@ -3,6 +3,7 @@ from sqlalchemy import (
     DateTime, Enum, ForeignKey, func
 )
 from sqlalchemy.orm import relationship
+from sqlalchemy import String
 from database import Base
 import enum
 
@@ -19,6 +20,8 @@ class CourierNameEnum(str, enum.Enum):
     blue_dart_surface = "Blue Dart Surface"
     bharat_dart       = "Bharat Dart"
     dtdc_express      = "DTDC EXPRESS"
+    delhivery         = "Delhivery"
+    other             = "Other"
 
 
 class CourierStatusEnum(str, enum.Enum):
@@ -75,7 +78,7 @@ class Shipment(Base):
     state          = Column(String(100), nullable=False)
 
     # Courier info
-    courier_name   = Column(Enum(CourierNameEnum), nullable=False)
+    courier_name = Column(String(100), nullable=False)
     awb_number     = Column(String(100), unique=True, nullable=False)
     dispatch_date  = Column(Date,        nullable=False)
     branch_tat     = Column(Integer,     nullable=True)

@@ -212,7 +212,7 @@ select.f, input.f { height: 30px; border: 0.5px solid #ccc; border-radius: 6px; 
         <div class="fg"><label>State <span class="req">*</span></label><input type="text" id="f-state" placeholder="State"></div>
         <div class="fg">
           <label>Courier Name <span class="req">*</span></label>
-          <select id="f-courier">
+          <select id="f-courier" onchange="toggleOtherCourier()">
             <option value="">Select Courier</option>
             <option value="Blue Dart">Blue Dart</option>
             <option value="Ship Rocket">Ship Rocket</option>
@@ -223,8 +223,15 @@ select.f, input.f { height: 30px; border: 0.5px solid #ccc; border-radius: 6px; 
             <option value="Blue Dart Surface">Blue Dart Surface</option>
             <option value="Bharat Dart">Bharat Dart</option>
             <option value="DTDC EXPRESS">DTDC EXPRESS</option>
+            <option value="Delhivery">Delhivery</option>
+            <option value="Other">Other — Enter Manually</option>
+
           </select>
         </div>
+        <div class="fg" id="other-courier-wrap" style="display:none">
+          <label>Courier Name (Manual) <span class="req">*</span></label>
+          <input type="text" id="f-courier-other" placeholder="Enter courier name">
+          </div>
         <div class="fg"><label>AWB Number <span class="req">*</span></label><input type="text" id="f-awb" placeholder="AWB-XXXXX"></div>
         <div class="fg"><label>Dispatch Date <span class="req">*</span></label><input type="date" id="f-dd"></div>
         <div class="fg"><label>Branch TAT (Days)</label><input type="number" id="f-tat" placeholder="e.g. 3"></div>
@@ -328,7 +335,7 @@ select.f, input.f { height: 30px; border: 0.5px solid #ccc; border-radius: 6px; 
 </div>
 
 <script>
-const API = 'https://courier-track-production-f0a8.up.railway.app';
+const API = 'http://localhost:8000';
 let currentUser = null;
 let editingId = null;
 let token = null;
@@ -472,7 +479,7 @@ async function loadShipments() {
         <td>${s.expected_delivery || '—'}</td>
         <td>${s.actual_delivery || '—'}</td>
         <td><span class="badge ${badgeCls(s.courier_status)}">${s.courier_status}</span></td>
-        <td>${isHead ? '<span style="font-size:11px;color:#666">View only</span>' : `<button class="btn btn-sm" onclick="openModal(${s.id},'${s.awb_number}','${s.branch_name}','${s.party_name}','${s.courier_name}','${s.courier_status}','${s.actual_delivery||''}')">Update</button>`}</td>
+        <td><button class="btn btn-sm" onclick="openModal(${s.id},'${s.awb_number}','${s.branch_name}','${s.party_name}','${s.courier_name}','${s.courier_status}','${s.actual_delivery||''}')">Update</button></td>
       </tr>`).join('') || '<tr><td colspan="12" style="text-align:center;padding:24px;color:#666">No shipments found</td></tr>';
 
     // Also update recent table for branch dashboard
@@ -512,7 +519,7 @@ function openModal(id, awb, branch, party, courier, status, actual) {
 function closeModal() { document.getElementById('modal').classList.remove('open'); editingId = null; }
 
 function toggleDeliveryField() {
-  document.getElementById('m-del-wrap').style.display = document.getElementById('m-status').value === 'Delivered' ? 'block' : 'none';
+  document.getElementById('m-del-wrap').style.display = 'block';  // hamesha dikhao
 }
 
 async function saveStatus() {
@@ -532,6 +539,11 @@ async function saveStatus() {
 }
 
 // ── ENTRY FORM ──
+function toggleOtherCourier() {
+  const val = document.getElementById('f-courier').value;
+  document.getElementById('other-courier-wrap').style.display = val === 'Other' ? 'block' : 'none';
+  if (val !== 'Other') document.getElementById('f-courier-other').value = '';
+}
 function checkPolicy(val) {
   const over = parseFloat(val) > 50000;
   document.getElementById('pol-warn').style.display = over ? 'block' : 'none';
@@ -564,7 +576,9 @@ async function submitEntry() {
       pin_code:          document.getElementById('f-pin').value,
       city:              document.getElementById('f-city').value,
       state:             document.getElementById('f-state').value,
-      courier_name:      document.getElementById('f-courier').value,
+      courier_name: document.getElementById('f-courier').value === 'Other'
+              ? document.getElementById('f-courier-other').value
+              : document.getElementById('f-courier').value,
       awb_number:        document.getElementById('f-awb').value,
       dispatch_date:     document.getElementById('f-dd').value,
       branch_tat:        parseInt(document.getElementById('f-tat').value) || null,

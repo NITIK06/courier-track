@@ -1,5 +1,6 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
+from urllib.parse import quote_plus
 import os
 from dotenv import load_dotenv
 
@@ -11,7 +12,8 @@ DB_NAME     = os.getenv("MYSQLDATABASE") or os.getenv("DB_NAME", "courier_track"
 DB_USER     = os.getenv("MYSQLUSER") or os.getenv("DB_USER", "root")
 DB_PASSWORD = os.getenv("MYSQLPASSWORD") or os.getenv("DB_PASSWORD", "")
 
-DATABASE_URL = f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+# quote_plus encodes special characters like @ in password
+DATABASE_URL = f"mysql+pymysql://{DB_USER}:{quote_plus(DB_PASSWORD)}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
 
 engine = create_engine(DATABASE_URL, echo=True)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

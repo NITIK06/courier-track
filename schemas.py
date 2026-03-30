@@ -34,7 +34,7 @@ class ShipmentCreate(BaseModel):
     pin_code:          str
     city:              str
     state:             str
-    courier_name:      CourierNameEnum
+    courier_name:      str
     awb_number:        str
     dispatch_date:     date
     branch_tat:        Optional[int]  = None
@@ -117,3 +117,7 @@ class DashboardOut(BaseModel):
     rto_pending:      int
     delayed_shipments: list[dict]         # list of {branch, awb} for alerts
     branch_summary:   list[BranchSummary] # only populated for head office
+class StatusUpdate(BaseModel):
+    """Used when a branch updates only the courier status (PATCH /shipments/{id}/status)"""
+    courier_status:  Optional[CourierStatusEnum] = None  # ← Optional karo
+    actual_delivery: Optional[date] = None

@@ -5,6 +5,7 @@ from database import get_db
 from models import User, Shipment
 from schemas import ShipmentCreate, ShipmentOut, StatusUpdate
 from routes.auth import get_current_user, require_branch
+from models import RoleEnum
 router = APIRouter(prefix="/shipments", tags=["Shipments"])
 
 
@@ -107,31 +108,22 @@ def update_status(
     shipment_id: int,
     data:        StatusUpdate,
     db:          Session = Depends(get_db),
-    current_user: User = Depends(require_branch)   # blocks head office
+    current_user: User = Depends(get_current_user)
 ):
-    """
-    Update courier status of a shipment. BRANCH ONLY.
-
-    Branch can only update status of their OWN shipments.
-    If a branch tries to update another branch's shipment → 403 Forbidden.
-
-    Request body:
-        { "courier_status": "Delivered", "actual_delivery": "2025-03-16" }
-    """
     shipment = db.query(Shipment).filter(Shipment.id == shipment_id).first()
 
     if not shipment:
         raise HTTPException(status_code=404, detail="Shipment not found")
 
-    # Branch can only update their own shipments
-    if shipment.branch_name != current_user.branch:
+    if current_user.role != RoleEnum.head and shipment.branch_name != current_user.branch:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You can only update shipments belonging to your branch"
         )
 
-    shipment.courier_status = data.courier_status
-    if data.actual_delivery:
+    if data.courier_status is not None:
+        shipment.courier_status = data.courier_status
+    if data.actual_delivery is not None:
         shipment.actual_delivery = data.actual_delivery
 
     db.commit()
