@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: sans-serif; background: #f5f5f0; color: #1a1a1a; font-size: 14px; }
+
+/* LOGIN */
+.login-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
+.login-card { background: #fff; border: 0.5px solid #ddd; border-radius: 14px; padding: 36px 32px; width: 100%; max-width: 380px; }
+.login-logo { font-size: 20px; font-weight: 500; margin-bottom: 6px; }
+.login-logo span { color: #1D6FE8; }
+.login-sub { font-size: 12px; color: #666; margin-bottom: 28px; }
+.login-field { margin-bottom: 14px; }
+.login-field label { font-size: 12px; font-weight: 500; color: #666; display: block; margin-bottom: 5px; }
+.login-field input, .login-field select { width: 100%; height: 38px; border: 0.5px solid #ccc; border-radius: 7px; padding: 0 12px; font-size: 13px; background: #fff; color: #1a1a1a; outline: none; }
+.login-field input:focus, .login-field select:focus { border-color: #1D6FE8; }
+.login-btn { width: 100%; height: 38px; background: #1D6FE8; color: #fff; border: none; border-radius: 7px; font-size: 13px; font-weight: 500; cursor: pointer; margin-top: 6px; }
+.login-btn:hover { background: #1760d0; }
+.login-err { font-size: 12px; color: #C94040; margin-top: 8px; display: none; }
+.login-hint { margin-top: 18px; background: #f5f5f0; border-radius: 8px; padding: 10px 12px; font-size: 11px; color: #666; line-height: 1.7; }
+.login-hint strong { color: #1a1a1a; }
+
+/* APP */
+.app { display: none; }
+.nav { background: #fff; border-bottom: 0.5px solid #ddd; padding: 0 20px; display: flex; align-items: center; height: 50px; }
+.nav-brand { font-size: 15px; font-weight: 500; margin-right: 28px; }
+.nav-brand span { color: #1D6FE8; }
+.nav-tab { padding: 0 14px; height: 50px; display: flex; align-items: center; font-size: 13px; cursor: pointer; border-bottom: 2px solid transparent; color: #666; transition: all .15s; }
+.nav-tab:hover { color: #1a1a1a; }
+.nav-tab.active { color: #1a1a1a; border-bottom-color: #1a1a1a; font-weight: 500; }
+.nav-tab.hidden { display: none; }
+.nav-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+.user-badge { font-size: 12px; font-weight: 500; background: #EBF2FE; color: #1D6FE8; padding: 3px 10px; border-radius: 10px; }
+.user-badge.ho { background: #F0FDF4; color: #166534; }
+.logout-btn { font-size: 12px; color: #666; cursor: pointer; padding: 4px 8px; border-radius: 6px; border: 0.5px solid #ddd; background: none; }
+.logout-btn:hover { background: #f5f5f0; }
+
+.page { display: none; padding: 20px; }
+.page.active { display: block; }
+
+.summary-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 10px; margin-bottom: 20px; }
+.stat-card { background: #fff; border: 0.5px solid #ddd; border-radius: 10px; padding: 12px 14px; }
+.stat-label { font-size: 11px; color: #666; margin-bottom: 5px; text-transform: uppercase; letter-spacing: .04em; }
+.stat-value { font-size: 22px; font-weight: 500; }
+
+.card { background: #fff; border: 0.5px solid #ddd; border-radius: 10px; overflow: hidden; }
+.card-header { padding: 12px 16px; border-bottom: 0.5px solid #ddd; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.card-title { font-size: 14px; font-weight: 500; }
+
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 12px; }
+th { padding: 8px 12px; text-align: left; font-weight: 500; font-size: 11px; color: #666; border-bottom: 0.5px solid #ddd; white-space: nowrap; background: #f9f9f7; }
+td { padding: 9px 12px; border-bottom: 0.5px solid #eee; white-space: nowrap; vertical-align: middle; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: #f9f9f7; }
+tr.row-delayed td { background: #FFF5F5; }
+tr.row-delayed:hover td { background: #FFE9E9; }
+
+.badge { display: inline-block; padding: 2px 9px; border-radius: 10px; font-size: 11px; font-weight: 500; }
+.b-transit { background: #DBEAFE; color: #1D4ED8; }
+.b-delivered { background: #DCFCE7; color: #166534; }
+.b-ofd { background: #FEF9C3; color: #854D0E; }
+.b-pending { background: #F1F5F9; color: #475569; }
+.b-delayed { background: #FEE2E2; color: #991B1B; }
+.b-rto { background: #FDE8D8; color: #9A3412; }
+
+.filters { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+select.f, input.f { height: 30px; border: 0.5px solid #ccc; border-radius: 6px; padding: 0 8px; font-size: 12px; background: #fff; color: #1a1a1a; outline: none; }
+
+.form-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; padding: 18px; }
+.fg { display: flex; flex-direction: column; gap: 4px; }
+.fg label { font-size: 11px; font-weight: 500; color: #666; }
+.fg label .req { color: #C94040; }
+.fg input, .fg select { height: 34px; border: 0.5px solid #ccc; border-radius: 6px; padding: 0 10px; font-size: 13px; background: #fff; color: #1a1a1a; outline: none; width: 100%; }
+.fg input:focus, .fg select:focus { border-color: #1D6FE8; }
+.policy-warn { font-size: 11px; color: #C94040; margin-top: 2px; display: none; }
+.form-actions { padding: 0 18px 18px; display: flex; gap: 8px; }
+.btn { height: 34px; padding: 0 18px; border-radius: 7px; font-size: 13px; font-weight: 500; cursor: pointer; border: 0.5px solid #ccc; background: #fff; color: #1a1a1a; }
+.btn:hover { background: #f5f5f0; }
+.btn-primary { background: #1D6FE8; color: #fff; border-color: #1D6FE8; }
+.btn-primary:hover { background: #1760d0; }
+.btn-sm { height: 28px; padding: 0 10px; font-size: 11px; }
+
+.branch-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 16px; }
+.branch-card { background: #fff; border: 0.5px solid #ddd; border-radius: 10px; padding: 12px 14px; }
+.branch-name { font-weight: 500; font-size: 13px; margin-bottom: 8px; }
+.branch-stats { display: flex; gap: 16px; }
+.bsv { font-size: 18px; font-weight: 500; }
+.bsl { font-size: 10px; color: #666; margin-top: 1px; }
+
+.alert-bar { background: #FFF5F5; border: 0.5px solid #FECACA; border-radius: 10px; padding: 10px 14px; margin-bottom: 18px; display: flex; align-items: flex-start; gap: 10px; }
+
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 200; align-items: center; justify-content: center; }
+.modal-overlay.open { display: flex; }
+.modal { background: #fff; border-radius: 12px; border: 0.5px solid #ddd; padding: 24px; width: 400px; max-width: 95vw; }
+.modal h3 { font-size: 15px; font-weight: 500; margin-bottom: 4px; }
+.modal-meta { font-size: 12px; color: #666; margin-bottom: 18px; line-height: 1.6; }
+.modal-field { margin-bottom: 12px; }
+.modal-field label { font-size: 12px; font-weight: 500; color: #666; display: block; margin-bottom: 4px; }
+.modal-field select, .modal-field input { width: 100%; height: 36px; border: 0.5px solid #ccc; border-radius: 7px; padding: 0 10px; font-size: 13px; background: #fff; color: #1a1a1a; outline: none; }
+.modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 18px; }
+
+.section-label { font-size: 11px; font-weight: 500; color: #666; margin-bottom: 10px; text-transform: uppercase; letter-spacing: .05em; }
+.page-title { font-size: 18px; font-weight: 500; }
+.page-sub { font-size: 12px; color: #666; margin-top: 2px; margin-bottom: 18px; }
+.loading { text-align: center; padding: 24px; color: #666; font-size: 13px; }
+</style>
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div class="login-wrap" id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">Courier<span>Track</span></div>
+    <div class="login-sub">Sign in to your branch or head office account</div>
+    <div class="login-field">
+      <label>Branch Code / Role</label>
+      <select id="l-code">
+        <option value="">Select your branch</option>
+        <option value="HO">HO — Head Office</option>
+        <option value="ZKP">ZKP — Zirakpur</option>
+        <option value="BWL">BWL — Barwala</option>
+        <option value="SNP">SNP — Sonipat</option>
+        <option value="KNP">KNP — Kanpur</option>
+        <option value="VNS">VNS — Varanasi</option>
+        <option value="ODS">ODS — Odisha</option>
+        <option value="RPR">RPR — Raipur</option>
+        <option value="PTN">PTN — Patna</option>
+        <option value="HWR">HWR — Howrah</option>
+        <option value="DLH">DLH — Delhi</option>
+      </select>
+    </div>
+    <div class="login-field">
+      <label>Password</label>
+      <input type="password" id="l-pass" placeholder="Enter password" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <button class="login-btn" onclick="doLogin()">Sign In</button>
+    <div class="login-err" id="login-err">Invalid branch code or password. Please try again.</div>
+    <div class="login-hint">
+      <strong>Demo credentials (all passwords: 1234)</strong><br>
+      HO / 1234 → Head Office<br>
+      ZKP / 1234 → Zirakpur · KNP / 1234 → Kanpur<br>
+      DLH / 1234 → Delhi … and so on
+    </div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div class="app" id="main-app">
+  <div class="nav">
+    <div class="nav-brand">Courier<span>Track</span></div>
+    <div class="nav-tab active" id="tab-dashboard" onclick="showPage('dashboard',this)">Dashboard</div>
+    <div class="nav-tab hidden" id="tab-entry" onclick="showPage('entry',this)">New Entry</div>
+    <div class="nav-tab" id="tab-shipments" onclick="showPage('shipments',this)">Shipments</div>
+    <div class="nav-right">
+      <span class="user-badge" id="user-badge">Head Office</span>
+      <button class="logout-btn" onclick="doLogout()">Logout</button>
+    </div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div class="page active" id="page-dashboard">
+    <div class="page-title" id="dash-title">Overview Dashboard</div>
+    <div class="page-sub" id="dash-sub">All 10 branches · Live courier status</div>
+    <div class="summary-grid">
+      <div class="stat-card"><div class="stat-label">Total</div><div class="stat-value" id="s-total">—</div></div>
+      <div class="stat-card"><div class="stat-label">In Transit</div><div class="stat-value" style="color:#1D6FE8" id="s-transit">—</div></div>
+      <div class="stat-card"><div class="stat-label">Delivered</div><div class="stat-value" style="color:#166534" id="s-del">—</div></div>
+      <div class="stat-card"><div class="stat-label">Out for Delivery</div><div class="stat-value" style="color:#7C3AED" id="s-ofd">—</div></div>
+      <div class="stat-card"><div class="stat-label">Delayed</div><div class="stat-value" style="color:#C94040" id="s-delayed">—</div></div>
+      <div class="stat-card"><div class="stat-label">RTO / Pending</div><div class="stat-value" style="color:#B07010" id="s-rto">—</div></div>
+    </div>
+    <div class="alert-bar" id="dash-alert" style="display:none">
+      <span style="font-size:16px">⚠</span>
+      <div>
+        <div style="font-size:13px;font-weight:500;color:#991B1B" id="alert-title"></div>
+        <div style="font-size:12px;color:#B91C1C;margin-top:2px" id="alert-body"></div>
+      </div>
+    </div>
+    <div id="branch-section-ho">
+      <div class="section-label">Branch Breakdown</div>
+      <div class="branch-grid" id="branch-grid"></div>
+    </div>
+    <div id="branch-section-br" style="display:none">
+      <div class="section-label">Your Recent Shipments</div>
+      <div class="card">
+        <div class="table-wrap"><table><thead><tr><th>AWB</th><th>Party</th><th>Invoice No.</th><th>Courier</th><th>Dispatch</th><th>Expected</th><th>Status</th><th>Action</th></tr></thead>
+        <tbody id="dash-recent-body"></tbody></table></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- NEW ENTRY -->
+  <div class="page" id="page-entry">
+    <div class="page-title">New Shipment Entry</div>
+    <div class="page-sub" id="entry-sub">Add a new consignment for your branch</div>
+    <div class="card">
+      <div class="card-header"><div class="card-title">Shipment Details</div><div style="font-size:12px;color:#666;margin-left:auto"><span style="color:#C94040">*</span> Required</div></div>
+      <div class="form-grid">
+        <div class="fg"><label>Timestamp <span class="req">*</span></label><input type="date" id="f-ts"></div>
+        <div class="fg"><label>Branch Name</label><input type="text" id="f-br" readonly style="background:#f5f5f0;color:#666"></div>
+        <div class="fg"><label>Party Code <span class="req">*</span></label><input type="text" id="f-pc" placeholder="PC-00123"></div>
+        <div class="fg"><label>Party Name <span class="req">*</span></label><input type="text" id="f-pn" placeholder="Full party name"></div>
+        <div class="fg"><label>Mobile <span class="req">*</span></label><input type="text" id="f-mob" placeholder="10-digit number" maxlength="10"></div>
+        <div class="fg"><label>Invoice Date <span class="req">*</span></label><input type="date" id="f-id"></div>
+        <div class="fg"><label>Invoice Number <span class="req">*</span></label><input type="text" id="f-in" placeholder="INV-XXXX"></div>
+        <div class="fg"><label>Invoice Value (₹) <span class="req">*</span></label><input type="number" id="f-iv" placeholder="0.00" oninput="checkPolicy(this.value)"></div>
+        <div class="fg"><label>Final Weight (Kg) <span class="req">*</span></label><input type="number" id="f-wt" placeholder="0.00"></div>
+        <div class="fg"><label>PIN Code <span class="req">*</span></label><input type="text" id="f-pin" placeholder="6-digit PIN" maxlength="6"></div>
+        <div class="fg"><label>City <span class="req">*</span></label><input type="text" id="f-city" placeholder="City"></div>
+        <div class="fg"><label>State <span class="req">*</span></label><input type="text" id="f-state" placeholder="State"></div>
+        <div class="fg">
+          <label>Courier Name <span class="req">*</span></label>
+          <select id="f-courier" onchange="toggleOtherCourier()">
+            <option value="">Select Courier</option>
+            <option value="Blue Dart">Blue Dart</option>
+            <option value="Ship Rocket">Ship Rocket</option>
+            <option value="Safe Express">Safe Express</option>
+            <option value="Jet Line">Jet Line</option>
+            <option value="DTDC LTL">DTDC LTL</option>
+            <option value="Blue Dart DP">Blue Dart DP</option>
+            <option value="Blue Dart Surface">Blue Dart Surface</option>
+            <option value="Bharat Dart">Bharat Dart</option>
+            <option value="DTDC EXPRESS">DTDC EXPRESS</option>
+            <option value="Delhivery">Delhivery</option>
+            <option value="Other">Other — Enter Manually</option>
+
+          </select>
+        </div>
+        <div class="fg" id="other-courier-wrap" style="display:none">
+          <label>Courier Name (Manual) <span class="req">*</span></label>
+          <input type="text" id="f-courier-other" placeholder="Enter courier name">
+          </div>
+        <div class="fg"><label>AWB Number <span class="req">*</span></label><input type="text" id="f-awb" placeholder="AWB-XXXXX"></div>
+        <div class="fg"><label>Dispatch Date <span class="req">*</span></label><input type="date" id="f-dd"></div>
+        <div class="fg"><label>Branch TAT (Days)</label><input type="number" id="f-tat" placeholder="e.g. 3"></div>
+        <div class="fg"><label>Expected Delivery</label><input type="date" id="f-ed"></div>
+        <div class="fg"><label>Actual Delivery</label><input type="date" id="f-ad"></div>
+        <div class="fg">
+          <label id="policy-lbl">Policy Number</label>
+          <input type="text" id="f-pol" placeholder="Policy number">
+          <div class="policy-warn" id="pol-warn">⚑ Mandatory — Invoice value exceeds ₹50,000</div>
+        </div>
+        <div class="fg">
+          <label>Courier Status <span class="req">*</span></label>
+          <select id="f-status">
+            <option value="">Select Status</option>
+            <option value="In Transit">In Transit</option>
+            <option value="Delivered">Delivered</option>
+            <option value="Out for Delivery">Out for Delivery</option>
+            <option value="Pending">Pending</option>
+            <option value="Delayed">Delayed</option>
+            <option value="RTO">RTO</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-primary" onclick="submitEntry()">Submit Entry</button>
+        <button class="btn" onclick="resetEntryForm()">Clear</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SHIPMENTS -->
+  <div class="page" id="page-shipments">
+    <div class="page-title">Shipments</div>
+    <div class="page-sub" id="ship-sub">Track and update courier status</div>
+    <div class="card">
+      <div class="card-header">
+        <div class="filters">
+          <select class="f" id="fil-branch" onchange="loadShipments()">
+            <option value="">All Branches</option>
+            <option>Zirakpur</option><option>Barwala</option><option>Sonipat</option>
+            <option>Kanpur</option><option>Varanasi</option><option>Odisha</option>
+            <option>Raipur</option><option>Patna</option><option>Howrah</option><option>Delhi</option>
+          </select>
+          <select class="f" id="fil-status" onchange="loadShipments()">
+            <option value="">All Statuses</option>
+            <option>In Transit</option><option>Delivered</option><option>Out for Delivery</option>
+            <option>Pending</option><option>Delayed</option><option>RTO</option>
+          </select>
+          <select class="f" id="fil-courier" onchange="loadShipments()">
+            <option value="">All Couriers</option>
+            <option>Blue Dart</option><option>Ship Rocket</option><option>Safe Express</option>
+            <option>Jet Line</option><option>DTDC LTL</option><option>Blue Dart DP</option>
+            <option>Blue Dart Surface</option><option>Bharat Dart</option><option>DTDC EXPRESS</option>
+          </select>
+          <input class="f" type="text" placeholder="Search AWB / Party…" id="fil-q" oninput="loadShipments()" style="width:170px">
+        </div>
+        <div style="margin-left:auto;font-size:12px;color:#666" id="row-count"></div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th><th>Branch</th><th>Party Name</th><th>Invoice No.</th>
+              <th>Invoice Value</th><th>AWB</th><th>Courier</th>
+              <th>Dispatch</th><th>Expected</th><th>Actual</th>
+              <th>Status</th><th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="ship-body"><tr><td colspan="12" class="loading">Loading...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- STATUS UPDATE MODAL -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <h3>Update Courier Status</h3>
+    <div class="modal-meta" id="modal-meta"></div>
+    <div class="modal-field">
+      <label>New Status</label>
+      <select id="m-status" onchange="toggleDeliveryField()">
+        <option value="In Transit">In Transit</option>
+        <option value="Delivered">Delivered</option>
+        <option value="Out for Delivery">Out for Delivery</option>
+        <option value="Pending">Pending</option>
+        <option value="Delayed">Delayed</option>
+        <option value="RTO">RTO</option>
+      </select>
+    </div>
+    <div class="modal-field" id="m-del-wrap" style="display:none">
+      <label>Actual Delivery Date</label>
+      <input type="date" id="m-del-date">
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveStatus()">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = 'http://localhost:8000';
+let currentUser = null;
+let editingId = null;
+let token = null;
+
+// ── API HELPER ──
+async function api(method, path, body = null) {
+  const headers = { 'Content-Type': 'application/json' };
+  if (token) headers['Authorization'] = 'Bearer ' + token;
+  const res = await fetch(API + path, {
+    method,
+    headers,
+    body: body ? JSON.stringify(body) : null
+  });
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.detail || 'API error');
+  }
+  return res.json();
+}
+
+// ── LOGIN ──
+async function doLogin() {
+  const code = document.getElementById('l-code').value.trim().toUpperCase();
+  const pass = document.getElementById('l-pass').value;
+  if (!code || !pass) { showErr('Please select branch and enter password'); return; }
+  try {
+    const data = await api('POST', '/login', { branch_code: code, password: pass });
+    token = data.access_token;
+    currentUser = data;
+    localStorage.setItem('ct_token', token);
+    localStorage.setItem('ct_user', JSON.stringify(data));
+    setupApp();
+  } catch(e) {
+    showErr(e.message);
+  }
+}
+
+function showErr(msg) {
+  const el = document.getElementById('login-err');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+function setupApp() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('main-app').style.display = 'block';
+
+  const isHead = currentUser.role === 'head';
+  document.getElementById('user-badge').textContent = currentUser.branch_name;
+  document.getElementById('user-badge').className = 'user-badge' + (isHead ? ' ho' : '');
+  document.getElementById('tab-entry').className = 'nav-tab' + (isHead ? ' hidden' : '');
+  document.getElementById('fil-branch').style.display = isHead ? '' : 'none';
+
+  if (!isHead) {
+    document.getElementById('branch-section-ho').style.display = 'none';
+    document.getElementById('branch-section-br').style.display = 'block';
+    document.getElementById('ship-sub').textContent = currentUser.branch_name + ' · Only your shipments';
+    document.getElementById('entry-sub').textContent = currentUser.branch_name;
+    document.getElementById('f-br').value = currentUser.branch;
+  }
+
+  loadDashboard();
+  loadShipments();
+}
+
+function doLogout() {
+  token = null;
+  currentUser = null;
+  localStorage.removeItem('ct_token');
+  localStorage.removeItem('ct_user');
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('main-app').style.display = 'none';
+  document.getElementById('l-code').value = '';
+  document.getElementById('l-pass').value = '';
+  document.getElementById('login-err').style.display = 'none';
+}
+
+// ── DASHBOARD ──
+async function loadDashboard() {
+  try {
+    const data = await api('GET', '/dashboard/');
+    document.getElementById('s-total').textContent = data.total;
+    document.getElementById('s-transit').textContent = data.in_transit;
+    document.getElementById('s-del').textContent = data.delivered;
+    document.getElementById('s-ofd').textContent = data.out_for_delivery;
+    document.getElementById('s-delayed').textContent = data.delayed;
+    document.getElementById('s-rto').textContent = data.rto_pending;
+
+    if (data.delayed_shipments.length) {
+      document.getElementById('dash-alert').style.display = 'flex';
+      document.getElementById('alert-title').textContent = data.delayed_shipments.length + ' Delayed Shipment(s) Need Attention';
+      document.getElementById('alert-body').textContent = data.delayed_shipments.map(s => s.branch + ' (' + s.awb + ')').join(' · ');
+    } else {
+      document.getElementById('dash-alert').style.display = 'none';
+    }
+
+    if (currentUser.role === 'head' && data.branch_summary) {
+      document.getElementById('branch-grid').innerHTML = data.branch_summary.map(b => `
+        <div class="branch-card">
+          <div class="branch-name">${b.branch_name}</div>
+          <div class="branch-stats">
+            <div><div class="bsv">${b.total}</div><div class="bsl">Total</div></div>
+            <div><div class="bsv" style="color:#1D6FE8">${b.in_transit}</div><div class="bsl">Transit</div></div>
+            <div><div class="bsv" style="color:#166534">${b.delivered}</div><div class="bsl">Delivered</div></div>
+            <div><div class="bsv" style="color:#C94040">${b.delayed}</div><div class="bsl">Delayed</div></div>
+          </div>
+        </div>`).join('');
+    }
+  } catch(e) {
+    console.error('Dashboard error:', e);
+  }
+}
+
+// ── SHIPMENTS ──
+async function loadShipments() {
+  const branch  = document.getElementById('fil-branch').value;
+  const status  = document.getElementById('fil-status').value;
+  const courier = document.getElementById('fil-courier').value;
+  const search  = document.getElementById('fil-q').value;
+
+  let url = '/shipments/?';
+  if (branch)  url += 'branch='  + encodeURIComponent(branch)  + '&';
+  if (status)  url += 'status='  + encodeURIComponent(status)  + '&';
+  if (courier) url += 'courier=' + encodeURIComponent(courier) + '&';
+  if (search)  url += 'search='  + encodeURIComponent(search)  + '&';
+
+  try {
+    const data = await api('GET', url);
+    document.getElementById('row-count').textContent = data.length + ' record' + (data.length !== 1 ? 's' : '');
+    const isHead = currentUser.role === 'head';
+    document.getElementById('ship-body').innerHTML = data.map((s, i) => `
+      <tr class="${s.courier_status === 'delayed' ? 'row-delayed' : ''}">
+        <td style="color:#666">${i+1}</td>
+        <td><strong>${s.branch_name}</strong></td>
+        <td>${s.party_name}</td>
+        <td style="font-family:monospace;font-size:11px">${s.invoice_number}</td>
+        <td>₹${s.invoice_value.toLocaleString('en-IN')}${s.invoice_value > 50000 ? '<span class="badge b-transit" style="margin-left:4px;font-size:10px">Policy</span>' : ''}</td>
+        <td style="font-family:monospace;font-size:11px">${s.awb_number}</td>
+        <td>${s.courier_name}</td>
+        <td>${s.dispatch_date || '—'}</td>
+        <td>${s.expected_delivery || '—'}</td>
+        <td>${s.actual_delivery || '—'}</td>
+        <td><span class="badge ${badgeCls(s.courier_status)}">${s.courier_status}</span></td>
+        <td><button class="btn btn-sm" onclick="openModal(${s.id},'${s.awb_number}','${s.branch_name}','${s.party_name}','${s.courier_name}','${s.courier_status}','${s.actual_delivery||''}')">Update</button></td>
+      </tr>`).join('') || '<tr><td colspan="12" style="text-align:center;padding:24px;color:#666">No shipments found</td></tr>';
+
+    // Also update recent table for branch dashboard
+    if (currentUser.role !== 'head') {
+      document.getElementById('dash-recent-body').innerHTML = data.slice(0, 8).map(s => `
+        <tr class="${s.courier_status === 'delayed' ? 'row-delayed' : ''}">
+          <td style="font-family:monospace;font-size:11px">${s.awb_number}</td>
+          <td>${s.party_name}</td>
+          <td style="font-family:monospace;font-size:11px">${s.invoice_number}</td>
+          <td>${s.courier_name}</td>
+          <td>${s.dispatch_date || '—'}</td>
+          <td>${s.expected_delivery || '—'}</td>
+          <td><span class="badge ${badgeCls(s.courier_status)}">${s.courier_status}</span></td>
+          <td><button class="btn btn-sm" onclick="openModal(${s.id},'${s.awb_number}','${s.branch_name}','${s.party_name}','${s.courier_name}','${s.courier_status}','${s.actual_delivery||''}')">Update</button></td>
+        </tr>`).join('') || '<tr><td colspan="8" style="text-align:center;padding:20px;color:#666">No shipments yet</td></tr>';
+    }
+  } catch(e) {
+    document.getElementById('ship-body').innerHTML = '<tr><td colspan="12" style="text-align:center;padding:24px;color:#C94040">Error loading data: ' + e.message + '</td></tr>';
+  }
+}
+
+function badgeCls(s) {
+  const map = { 'in_transit':'b-transit','delivered':'b-delivered','out_for_delivery':'b-ofd','pending':'b-pending','delayed':'b-delayed','rto':'b-rto' };
+  return map[s] || 'b-pending';
+}
+
+// ── MODAL ──
+function openModal(id, awb, branch, party, courier, status, actual) {
+  editingId = id;
+  document.getElementById('modal-meta').innerHTML = `<strong>AWB:</strong> ${awb}<br><strong>Branch:</strong> ${branch}<br><strong>Party:</strong> ${party}<br><strong>Courier:</strong> ${courier}`;
+  document.getElementById('m-status').value = status;
+  document.getElementById('m-del-date').value = actual || '';
+  toggleDeliveryField();
+  document.getElementById('modal').classList.add('open');
+}
+
+function closeModal() { document.getElementById('modal').classList.remove('open'); editingId = null; }
+
+function toggleDeliveryField() {
+  document.getElementById('m-del-wrap').style.display = 'block';  // hamesha dikhao
+}
+
+async function saveStatus() {
+  const status = document.getElementById('m-status').value;
+  const actual = document.getElementById('m-del-date').value;
+  try {
+    await api('PATCH', '/shipments/' + editingId + '/status', {
+      courier_status: status,
+      actual_delivery: actual || null
+    });
+    closeModal();
+    loadShipments();
+    loadDashboard();
+  } catch(e) {
+    alert('Error: ' + e.message);
+  }
+}
+
+// ── ENTRY FORM ──
+function toggleOtherCourier() {
+  const val = document.getElementById('f-courier').value;
+  document.getElementById('other-courier-wrap').style.display = val === 'Other' ? 'block' : 'none';
+  if (val !== 'Other') document.getElementById('f-courier-other').value = '';
+}
+function checkPolicy(val) {
+  const over = parseFloat(val) > 50000;
+  document.getElementById('pol-warn').style.display = over ? 'block' : 'none';
+  document.getElementById('policy-lbl').innerHTML = over ? 'Policy Number <span class="req">*</span>' : 'Policy Number';
+}
+
+async function submitEntry() {
+  const iv = parseFloat(document.getElementById('f-iv').value || 0);
+  if (iv > 50000 && !document.getElementById('f-pol').value.trim()) {
+    alert('Policy Number is mandatory when Invoice Value exceeds ₹50,000');
+    return;
+  }
+  const required = ['f-ts','f-pc','f-pn','f-mob','f-id','f-in','f-iv','f-wt','f-pin','f-city','f-state','f-courier','f-awb','f-dd','f-status'];
+  for (const r of required) {
+    if (!document.getElementById(r).value) {
+      alert('Please fill all required fields.');
+      document.getElementById(r).focus();
+      return;
+    }
+  }
+  try {
+    await api('POST', '/shipments/', {
+      party_code:        document.getElementById('f-pc').value,
+      party_name:        document.getElementById('f-pn').value,
+      mobile:            document.getElementById('f-mob').value,
+      invoice_date:      document.getElementById('f-id').value,
+      invoice_number:    document.getElementById('f-in').value,
+      invoice_value:     iv,
+      final_weight:      parseFloat(document.getElementById('f-wt').value),
+      pin_code:          document.getElementById('f-pin').value,
+      city:              document.getElementById('f-city').value,
+      state:             document.getElementById('f-state').value,
+      courier_name: document.getElementById('f-courier').value === 'Other'
+              ? document.getElementById('f-courier-other').value
+              : document.getElementById('f-courier').value,
+      awb_number:        document.getElementById('f-awb').value,
+      dispatch_date:     document.getElementById('f-dd').value,
+      branch_tat:        parseInt(document.getElementById('f-tat').value) || null,
+      expected_delivery: document.getElementById('f-ed').value || null,
+      actual_delivery:   document.getElementById('f-ad').value || null,
+      policy_number:     document.getElementById('f-pol').value.trim() || null,
+      courier_status:    document.getElementById('f-status').value,
+    });
+    alert('Shipment submitted successfully!');
+    resetEntryForm();
+    loadDashboard();
+    loadShipments();
+  } catch(e) {
+    alert('Error: ' + e.message);
+  }
+}
+
+function resetEntryForm() {
+  ['f-ts','f-pc','f-pn','f-mob','f-id','f-in','f-iv','f-wt','f-pin','f-city','f-state','f-courier','f-awb','f-dd','f-tat','f-ed','f-ad','f-pol','f-status'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
+  });
+  document.getElementById('pol-warn').style.display = 'none';
+  document.getElementById('f-br').value = currentUser.branch;
+}
+
+// ── NAV ──
+function showPage(name, tab) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  tab.classList.add('active');
+  if (name === 'shipments') loadShipments();
+  if (name === 'dashboard') loadDashboard();
+}
+
+// ── AUTO LOGIN if token saved ──
+window.onload = function() {
+  const savedToken = localStorage.getItem('ct_token');
+  const savedUser  = localStorage.getItem('ct_user');
+  if (savedToken && savedUser) {
+    token = savedToken;
+    currentUser = JSON.parse(savedUser);
+    setupApp();
+  }
+};
+</script>
+</body>
+</html>
